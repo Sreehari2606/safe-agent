@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, User, Bell, Shield, Moon, Globe, ChevronRight, Save, CheckCircle } from 'lucide-react';
 
 const Toggle = ({ checked, onChange }) => (
@@ -11,30 +11,66 @@ const Toggle = ({ checked, onChange }) => (
   </button>
 );
 
+const DEFAULT_PROFILE = {
+  name: 'Rahul Kumar',
+  partner_id: 'SW4821',
+  phone: '+91 98765 43210',
+  city: 'Bengaluru',
+  vehicle: 'Two-Wheeler',
+};
+
+const DEFAULT_NOTIFICATIONS = {
+  hazard_alerts: true,
+  weather_warnings: true,
+  night_mode_remind: true,
+  daily_safety_tip: false,
+  email_digest: false,
+};
+
+const DEFAULT_PREFS = {
+  dark_mode: true,
+  high_contrast: false,
+  language: 'English',
+  unit: 'Metric',
+};
+
 export default function Settings() {
   const [saved, setSaved] = useState(false);
-  const [profile, setProfile] = useState({
-    name: 'Rahul Kumar',
-    partner_id: 'SW4821',
-    phone: '+91 98765 43210',
-    city: 'Bengaluru',
-    vehicle: 'Two-Wheeler',
+  const [profile, setProfile] = useState(() => {
+    try {
+      const stored = localStorage.getItem('saferoute_profile');
+      return stored ? JSON.parse(stored) : DEFAULT_PROFILE;
+    } catch {
+      return DEFAULT_PROFILE;
+    }
   });
-  const [notifications, setNotifications] = useState({
-    hazard_alerts: true,
-    weather_warnings: true,
-    night_mode_remind: true,
-    daily_safety_tip: false,
-    email_digest: false,
+
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const stored = localStorage.getItem('saferoute_notifications');
+      return stored ? JSON.parse(stored) : DEFAULT_NOTIFICATIONS;
+    } catch {
+      return DEFAULT_NOTIFICATIONS;
+    }
   });
-  const [prefs, setPrefs] = useState({
-    dark_mode: true,
-    high_contrast: false,
-    language: 'English',
-    unit: 'Metric',
+
+  const [prefs, setPrefs] = useState(() => {
+    try {
+      const stored = localStorage.getItem('saferoute_prefs');
+      return stored ? JSON.parse(stored) : DEFAULT_PREFS;
+    } catch {
+      return DEFAULT_PREFS;
+    }
   });
 
   const handleSave = () => {
+    try {
+      localStorage.setItem('saferoute_profile', JSON.stringify(profile));
+      localStorage.setItem('saferoute_notifications', JSON.stringify(notifications));
+      localStorage.setItem('saferoute_prefs', JSON.stringify(prefs));
+    } catch (err) {
+      console.error('Failed to save to localStorage', err);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -51,13 +87,13 @@ export default function Settings() {
           <SettingsIcon className="w-6 h-6 text-swiggy-orange" />
           Settings
         </h1>
-        <p className="text-gray-400 text-sm mt-1">Manage your profile, notifications, and preferences.</p>
+        <p className="text-gray-400 text-sm mt-1">Manage your partner profile, alert preferences, and app options (Saved locally to browser storage).</p>
       </div>
 
       {saved && (
-        <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-green-400" />
-          <p className="text-green-300 text-sm font-medium">Settings saved successfully (demo)</p>
+        <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3 animate-fade-in">
+          <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+          <p className="text-green-300 text-sm font-medium">Preferences saved successfully to browser storage!</p>
         </div>
       )}
 
@@ -69,7 +105,7 @@ export default function Settings() {
         </h2>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full bg-swiggy-orange flex items-center justify-center text-2xl font-bold text-white shrink-0">
-            RK
+            {profile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'RK'}
           </div>
           <div>
             <p className="font-semibold text-white">{profile.name}</p>
@@ -118,11 +154,11 @@ export default function Settings() {
         </h2>
         <div className="space-y-4">
           {[
-            { key: 'hazard_alerts', label: 'Hazard Alerts', desc: 'Get notified about new hazards in your area' },
-            { key: 'weather_warnings', label: 'Weather Warnings', desc: 'Severe weather alerts before your shift' },
-            { key: 'night_mode_remind', label: 'Night Mode Reminder', desc: 'Remind me of night safety tips after 7 PM' },
-            { key: 'daily_safety_tip', label: 'Daily Safety Tip', desc: 'Receive one safety tip every morning' },
-            { key: 'email_digest', label: 'Email Digest', desc: 'Weekly safety summary to your email' },
+            { key: 'hazard_alerts', label: 'Hazard Alerts', desc: 'Get notified about new road hazards in your delivery zone' },
+            { key: 'weather_warnings', label: 'Weather Warnings', desc: 'Severe rainfall and storm warnings before your shift' },
+            { key: 'night_mode_remind', label: 'Night Mode Reminder', desc: 'Remind me of night safety tips and reflective gear after 7 PM' },
+            { key: 'daily_safety_tip', label: 'Daily Safety Tip', desc: 'Receive one practical safety tip every morning' },
+            { key: 'email_digest', label: 'Email Digest', desc: 'Weekly safety summary sent to registered email' },
           ].map(({ key, label, desc }) => (
             <div key={key} className="flex items-center justify-between gap-4">
               <div>
@@ -145,14 +181,14 @@ export default function Settings() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-white">Dark Mode</p>
-              <p className="text-xs text-gray-400 mt-0.5">Use dark theme (always on in this demo)</p>
+              <p className="text-xs text-gray-400 mt-0.5">High-contrast dark theme optimized for night riding</p>
             </div>
             <Toggle checked={prefs.dark_mode} onChange={togglePref('dark_mode')} />
           </div>
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-white">High Contrast</p>
-              <p className="text-xs text-gray-400 mt-0.5">Improve visibility in bright sunlight</p>
+              <p className="text-xs text-gray-400 mt-0.5">Boost contrast for outdoor visibility in bright direct sunlight</p>
             </div>
             <Toggle checked={prefs.high_contrast} onChange={togglePref('high_contrast')} />
           </div>
@@ -185,38 +221,36 @@ export default function Settings() {
         <div className="space-y-2 text-sm text-gray-400">
           <div className="flex justify-between">
             <span>Version</span>
-            <span className="text-white">1.0.0 (Demo)</span>
+            <span className="text-white">1.0.0 (Assessment Prototype)</span>
           </div>
           <div className="flex justify-between">
-            <span>Backend</span>
-            <span className="text-white">FastAPI + SQLite</span>
+            <span>Database</span>
+            <span className="text-emerald-400 font-semibold">Supabase PostgreSQL (Cloud) / SQLite fallback</span>
           </div>
           <div className="flex justify-between">
-            <span>Map</span>
-            <span className="text-white">OpenStreetMap (Free)</span>
+            <span>Mapping Engine</span>
+            <span className="text-white">Leaflet + OpenStreetMap (Free, Zero API cost)</span>
           </div>
           <div className="flex justify-between">
-            <span>Weather</span>
-            <span className="text-white">Open-Meteo (Free)</span>
+            <span>Weather Service</span>
+            <span className="text-white">Open-Meteo (Live, Free)</span>
           </div>
           <div className="flex justify-between">
-            <span>AI</span>
-            <span className="text-white">Demo mode (Gemini-ready)</span>
+            <span>AI Assistant</span>
+            <span className="text-yellow-400 font-medium">Curated Safety Knowledge Base (Optional Gemini API ready)</span>
           </div>
         </div>
         <div className="mt-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
           <p className="text-xs text-yellow-300">
-            SafeRoute is a demonstration prototype built for a Swiggy Growth internship assessment. 
-            Not affiliated with Swiggy Ltd.
+            ⚠️ <strong>Academic / Assessment Prototype:</strong> SafeRoute is a demonstration project built for the Swiggy Growth internship assessment. Not affiliated with Swiggy Ltd. Emergency contacts are genuine Indian helplines.
           </p>
         </div>
       </div>
 
-      <button onClick={handleSave} className="btn-primary w-full flex items-center justify-center gap-2 py-3">
+      <button onClick={handleSave} className="btn-primary w-full flex items-center justify-center gap-2 py-3 shadow-lg">
         <Save className="w-4 h-4" />
-        Save Settings (Demo)
+        Save Settings
       </button>
     </div>
   );
 }
-

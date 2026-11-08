@@ -220,12 +220,15 @@ export default function SafetyMap() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Alternative Safe Detour</span>
-                    <span className="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px]">Active</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Illustrative Detour Preview</span>
+                    <span className="badge bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-[10px]">Demo Path</span>
                   </div>
                   <h3 className="text-sm font-bold text-white mt-0.5">{selectedHazard.detour_name}</h3>
                   <p className="text-xs text-emerald-400 font-semibold mt-0.5">
-                    ⏱️ Impact: {selectedHazard.detour_est_time} · Bypasses hazard safely
+                    ⏱️ Estimated Impact: {selectedHazard.detour_est_time}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-tight">
+                    ⚠️ Illustrative sample detour for assessment demo. Always verify live ground conditions.
                   </p>
                 </div>
               </div>
