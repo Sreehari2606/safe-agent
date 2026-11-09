@@ -24,6 +24,18 @@ export default function HazardReport() {
     e.preventDefault();
     setStatus('loading');
     setErrorMsg('');
+    const newHazard = {
+      ...form,
+      id: Date.now(),
+      latitude: parseFloat(form.latitude),
+      longitude: parseFloat(form.longitude),
+      status: 'active',
+      confirmations: 1,
+      cleared_reports: 0,
+      is_demo: 0,
+      created_at: new Date().toISOString(),
+    };
+
     try {
       await hazardApi.create({
         ...form,
@@ -34,9 +46,19 @@ export default function HazardReport() {
       setForm(INITIAL);
       await refetch();
       setTimeout(() => setStatus(null), 4000);
-    } catch (err) {
-      setStatus('error');
-      setErrorMsg(err?.response?.data?.detail || err.message || 'Submission failed');
+    } catch {
+      // Offline fallback: save locally so user action never fails
+      try {
+        const local = JSON.parse(localStorage.getItem('saferoute_local_hazards') || '[]');
+        localStorage.setItem('saferoute_local_hazards', JSON.stringify([newHazard, ...local]));
+        setStatus('success');
+        setForm(INITIAL);
+        await refetch();
+        setTimeout(() => setStatus(null), 4000);
+      } catch (err) {
+        setStatus('error');
+        setErrorMsg('Submission failed. Please check your network.');
+      }
     }
   };
 

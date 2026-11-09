@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, AlertCircle, Sparkles, MessageSquare } from 'lucide-react';
 import { assistantApi } from '../services/api';
+import { getClientSafetyResponse } from '../utils/safetyKnowledge';
 
 const QUICK_PROMPTS = [
   { label: '🌧️ Rain safety', msg: 'Give me rain safety tips for delivery' },
@@ -97,15 +98,18 @@ export default function AIAssistant() {
         id: Date.now() + 1,
         role: 'assistant',
         content: data.reply,
-        disclaimer: data.disclaimer,
+        disclaimer: data.disclaimer || "Demo mode: responses are pre-programmed safety knowledge, not live AI.",
         time: now(),
       };
       setMessages(prev => [...prev, botMsg]);
     } catch {
+      // Graceful fallback to client safety knowledge base so Vercel deployment never breaks
+      const fallback = getClientSafetyResponse(msgText);
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         role: 'assistant',
-        content: "⚠️ Sorry, I couldn't connect to the backend. Please ensure the FastAPI server is running on port 8000.",
+        content: fallback.reply,
+        disclaimer: "⚡ Safety Knowledge Base (Instant Mode)",
         time: now(),
       }]);
     } finally {

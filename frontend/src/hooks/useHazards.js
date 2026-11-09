@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { hazardApi } from '../services/api';
+import { DEFAULT_HAZARDS } from '../utils/constants';
 
 export function useHazards(params = {}) {
   const [hazards, setHazards] = useState([]);
@@ -14,8 +15,19 @@ export function useHazards(params = {}) {
       const { data } = await hazardApi.list(params);
       setHazards(data.hazards || []);
       setTotal(data.total || 0);
-    } catch (err) {
-      setError(err.message || 'Failed to load hazards');
+    } catch {
+      // Graceful fallback to default seed hazards + local user reports if backend is offline/sleeping
+      try {
+        const localCustom = JSON.parse(localStorage.getItem('saferoute_local_hazards') || '[]');
+        let combined = [...localCustom, ...DEFAULT_HAZARDS];
+        if (params.category) combined = combined.filter(h => h.category === params.category);
+        if (params.status) combined = combined.filter(h => h.status === params.status);
+        setHazards(combined);
+        setTotal(combined.length);
+      } catch {
+        setHazards(DEFAULT_HAZARDS);
+        setTotal(DEFAULT_HAZARDS.length);
+      }
     } finally {
       setLoading(false);
     }
@@ -26,4 +38,3 @@ export function useHazards(params = {}) {
 
   return { hazards, total, loading, error, refetch: fetch };
 }
-

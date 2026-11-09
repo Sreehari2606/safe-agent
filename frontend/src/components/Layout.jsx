@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Map, MessageSquare, AlertTriangle,
   Phone, Settings, Menu, X, Shield, ChevronRight
 } from 'lucide-react';
+import { systemApi } from '../services/api';
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -16,7 +17,14 @@ const NAV_ITEMS = [
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [backendOk, setBackendOk] = useState(null);
   const location = useLocation();
+
+  useEffect(() => {
+    systemApi.health()
+      .then(() => setBackendOk(true))
+      .catch(() => setBackendOk(false));
+  }, []);
 
   const currentPage = NAV_ITEMS.find(item =>
     item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
@@ -117,9 +125,13 @@ export default function Layout({ children }) {
           </div>
 
           <div className="ml-auto flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs text-green-400 font-medium">Backend Connected</span>
+            <div className={`hidden sm:flex items-center gap-2 rounded-lg px-3 py-1.5 border text-xs font-medium ${
+              backendOk === true
+                ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-300'
+            }`}>
+              <div className={`w-2 h-2 rounded-full animate-pulse ${backendOk === true ? 'bg-green-500' : 'bg-yellow-400'}`} />
+              <span>{backendOk === true ? 'Cloud Backend Online' : 'Smart Offline Mode'}</span>
             </div>
             <span className="demo-label">DEMO</span>
           </div>
