@@ -44,3 +44,4 @@ export function getClientSafetyResponse(message) {
   const reply = list[Math.floor(Math.random() * list.length)];
   return { reply, topic, is_demo: true };
 }
+
